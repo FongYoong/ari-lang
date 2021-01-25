@@ -1,0 +1,14 @@
+fn makeCounter() {
+  let i = 0;
+  fn count() {
+    i = i + 1;
+    println "Result " + i;
+  }
+
+  return count;
+}
+
+let counter = makeCounter();
+counter(); // "1"
+counter(); // "2"
+counter(); // "3"

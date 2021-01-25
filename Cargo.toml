@@ -1,0 +1,11 @@
+  [workspace]
+members = [
+  "ari",
+  "ari_parser",
+  "ari_errors",
+  
+]
+
+#[profile.release]
+# Uncomment when debugging or profiling release build
+# debug = true
