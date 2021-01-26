@@ -1,0 +1,71 @@
+// Number operations
+println 1/power(2, 4);
+println power(5, 3/0.25);
+println log(2,1024);
+println modulo(6,5);
+println absolute(-1.546);
+println floor(1.99999);
+println ceiling(1.99999);
+println max(0.998,0.999);
+println min(0.998,0.999);
+
+// String/Number conversions
+println to_string(3.142);
+println to_number("3.142");
+
+// String operations
+println (split("a,b,c", ","))[2];
+println split("a,b,c", ",") + split("a::b::c", "::");
+println to_lowercase("HoHo");
+println to_uppercase("HoHo");
+
+// Array operations
+println length("hoho");
+println insert([8,9,10], 2, [1,2]);
+println insert("hoho", 2.0, "123");
+println remove([4,5,6], 1);
+println remove("hiao", 2);
+
+fn map_function (arg) {
+    return arg * 10;
+}
+
+println map([1,2,3], map_function);
+
+fn filter_function (arg) {
+    if (arg == 3 or arg == 2) {
+        return true;
+    }
+}
+
+println filter([9,2,5,7,3,1,0,3,2,5,7], filter_function);
+
+fn reduce_function (a, b) {
+    return a + b;
+}
+
+println reduce([1,2,3,4,5,6,7,8,9], 0, reduce_function);
+println reduce(["h", "o", "h", "o"], "", reduce_function);
+
+println range(1, 5, 1.2);
+println linspace(1, 5, 4);
+let x = repeat("hehe", 99);
+println (repeat("hoho", 100) + insert(x, length(x), ["hio"]))[99];
+
+// Random generation
+println random_choose(["a", "b", "c"], 100);
+println random_normal(0, 1, 100);
+
+// File operations
+println "";
+println split(read_file("test.ari"), "");
+
+let content = "helloooo";
+println write_file("hello.txt", content);
+
+println read_file("hello.txt");
+
+// Web
+//println web_get("https://this-page-intentionally-left-blank.org/");
+//println web_post("http://httpbin.org/post", ["language", "ari", "body", "json"]);
+serve_static_folder("public", "localhost", 8000);
