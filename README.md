@@ -7,9 +7,7 @@
 ⭐ [**Windows**](https://github.com/FongYoong/ari-lang/releases/download/0.1.0/ari-windows.exe)
 
 ***
-### Try it now:
-
-<iframe height="400px" width="100%" src="https://repl.it/@FongChien/Ari-Language-Linux?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"></iframe>
+### [🎮 Try it now](https://repl.it/@FongChien/Ari-Language-Linux?lite=true)
 
 ***
 ### Clone on REPL.IT
