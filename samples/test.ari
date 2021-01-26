@@ -1,6 +1,0 @@
-let apples = 3 + 7; // Add
-print apples + " apples"; // Print stuff
-let bananas = 20/5;
-println bananas + " bananas";
-println apples + " bananas " + "and " + bananas + " apples";
-println apples + bananas + " fruits!";
