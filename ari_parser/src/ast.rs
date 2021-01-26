@@ -31,7 +31,7 @@ pub enum LiteralType {
 }
 
 pub struct Literal {
-    literal_type : LiteralType,
+    pub literal_type : LiteralType,
     pub value : String,
 
     // Array
@@ -211,11 +211,17 @@ impl Statement {
         Statement::new(StatementType::Bai, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new())
     }
 
-    pub fn print(&mut self, newline: bool) {
+    pub fn print(&self, newline: bool) {
         let max_display = 5; // Maximum elements to display
-        let literal = self.expr.as_mut().unwrap().evaluate_expr();
+        let literal = self.expr.as_ref().unwrap().evaluate_expr();
         if literal.literal_type == LiteralType::Array {
             let length = literal.array_values.len();
+            if length == 0 {
+                if newline {
+                    print!("\n");
+                }
+                return;
+            }
             print!("{:?}({}) => [", literal.array_values.get(0).unwrap().literal_type, length);
             let mut index = 0;
             for value in literal.array_values {
@@ -224,7 +230,7 @@ impl Statement {
                 }
                 print!("{}", value.value);
                 if index != length - 1 {
-                    print!(",");
+                    print!(", ");
                 }
                 index += 1;
             }
@@ -232,16 +238,20 @@ impl Statement {
                 print!(" ...");
             }
             print!("]");
-            if newline {
-                print!("\n");
-            }
+        }
+        else if literal.literal_type == LiteralType::String {
+            //print!("\"{}\"", literal.value);
+            print!("{}", literal.value);
         }
         else {
-            println!("{}", literal.value);
+            print!("{}", literal.value);
+        }
+        if newline {
+            print!("\n");
         }
     }
 
-    pub fn evaluate_statement(&mut self) -> Literal {
+    pub fn evaluate_statement(&self) -> Literal {
         match self.statement_type {
             StatementType::Function => {
                 // Declare user-defined function
@@ -252,7 +262,7 @@ impl Statement {
             },
             StatementType::Return => {
                 // Returns from enclosing function
-                let mut literal = self.expr.as_mut().unwrap().evaluate_expr();
+                let mut literal = self.expr.as_ref().unwrap().evaluate_expr();
                 literal.is_return = true;
                 return literal;
             },
@@ -261,7 +271,7 @@ impl Statement {
                 ENV.lock().unwrap().create_env();
                 let mut continue_condition = false;
                 let mut result = Literal::none();
-                for s in &mut self.statements {
+                for s in &self.statements {
                     let literal = s.evaluate_statement();
                     if literal.literal_type == LiteralType::Break || literal.is_return {
                         result = literal;
@@ -279,24 +289,24 @@ impl Statement {
                 return result;
             },
             StatementType::Expression => {
-                return self.expr.as_mut().unwrap().evaluate_expr();
+                return self.expr.as_ref().unwrap().evaluate_expr();
             },
 
             // Conditional
             StatementType::If => {
-                let expr = self.expr.as_mut().unwrap();
+                let expr = self.expr.as_ref().unwrap();
                 let condition_literal = expr.evaluate_expr();
                 if !Expr::is_truthy(&condition_literal) {
                     expr.print_custom_error(&format!("'If' conditional cannot be applied to {:?}", condition_literal.literal_type));
                 }
                 if expr.string_to_bool(&condition_literal) {
-                    let result = self.then_branch.as_mut().unwrap().evaluate_statement();
+                    let result = self.then_branch.as_ref().unwrap().evaluate_statement();
                     if result.literal_type == LiteralType::Break || result.literal_type == LiteralType::Continue || result.is_return {
                         return result;
                     }
                 }
                 else {
-                    match self.else_branch.as_mut() {
+                    match self.else_branch.as_ref() {
                         Some(else_statement) => {
                             let result = else_statement.evaluate_statement();
                             if result.literal_type == LiteralType::Break || result.literal_type == LiteralType::Continue || result.is_return {
@@ -310,14 +320,14 @@ impl Statement {
             },
             StatementType::While => {
                 loop {
-                    let expr = self.expr.as_mut().unwrap();
+                    let expr = self.expr.as_ref().unwrap();
                     let condition_literal = expr.evaluate_expr();
                     if !Expr::is_truthy(&condition_literal) {
                         expr.print_custom_error(&format!("'While' conditional cannot be applied to {:?}", condition_literal.literal_type));
                     }
                     // Evaluate 'then' branch
                     if expr.string_to_bool(&condition_literal) {
-                        let result = self.then_branch.as_mut().unwrap().evaluate_statement();
+                        let result = self.then_branch.as_ref().unwrap().evaluate_statement();
                         if result.literal_type == LiteralType::Break {
                             break;
                         }
@@ -347,7 +357,7 @@ impl Statement {
                 return Literal::none();
             },
             StatementType::Let => {
-                let expr = self.expr.as_mut().unwrap();
+                let expr = self.expr.as_ref().unwrap();
                 if expr.expr_type == ExprType::None {
                     self.print_error(ari_errors::ErrorType::InvalidVariableDefinition);
                     return Literal::none();
@@ -360,7 +370,7 @@ impl Statement {
                 return literal;
             },
             StatementType::Bai => {
-                let literal = self.expr.as_mut().unwrap().evaluate_expr();
+                let literal = self.expr.as_ref().unwrap().evaluate_expr();
                 let value = match literal.value.as_str() {
                     "0" => "",
                     "1" => "\nPoof",
@@ -378,10 +388,10 @@ impl Statement {
             }
         }
     }
-    fn print_error(&mut self, error: ari_errors::ErrorType){
+    fn print_error(&self, error: ari_errors::ErrorType){
         self.token_name.print_error(error);
     }
-    fn print_custom_error(&mut self, message: &str){
+    fn print_custom_error(&self, message: &str){
         self.token_name.print_custom_error(message);
     }
 }
@@ -516,7 +526,7 @@ impl Expr {
     pub fn is_truthy(literal : &Literal) -> bool{
         return (literal.literal_type == LiteralType::Bool) || (literal.literal_type == LiteralType::Null)
     }
-    pub fn string_to_bool(&mut self, literal : &Literal) -> bool {
+    pub fn string_to_bool(&self, literal : &Literal) -> bool {
         // Converts bool and null
         // &mut self is included for the purpose of tracking down the error location
         let result = match literal.value.as_str() {
@@ -536,7 +546,7 @@ impl Expr {
         };
         return result;
     }
-    pub fn is_equal(&mut self, op_name: &str, left_type: LiteralType, right_type: LiteralType, left_string: &str, right_string: &str) -> bool {
+    pub fn is_equal(&self, op_name: &str, left_type: LiteralType, right_type: LiteralType, left_string: &str, right_string: &str) -> bool {
         // &mut self is included for the purpose of tracking down the error location
         if left_type != right_type {
             self.print_custom_error(&format!("{} cannot be applied to {:?} and {:?}", op_name, left_type, right_type));
@@ -563,19 +573,19 @@ impl Expr {
     }
 
     pub fn divide(left: &Literal, right: &Literal) -> Result<f32, ()> {
-        let right_value = Expr::string_to_float(&right);
-        if right_value as i32 == 0 {
+        let result = Expr::string_to_float(&left) / Expr::string_to_float(&right);
+        if result.is_infinite() {
            return Err(());
         }
-        return Ok(Expr::string_to_float(&left) / right_value);
+        return Ok(result);
     }
 
     // Evaluate expression
-    pub fn evaluate_expr(&mut self) -> Literal {
+    pub fn evaluate_expr(&self) -> Literal {
         match self.expr_type {
             ExprType::Binary => {
-                let mut left = self.left.as_mut().unwrap().evaluate_expr();
-                let mut right = self.right.as_mut().unwrap().evaluate_expr();
+                let mut left = self.left.as_ref().unwrap().evaluate_expr();
+                let mut right = self.right.as_ref().unwrap().evaluate_expr();
 
                 match self.operator.token_type {
                     // Arithmetic/Concatenation operators
@@ -770,7 +780,6 @@ impl Expr {
                                         }
                                     };
                                     if left_array_type == LiteralType::Number {
-                                        //
                                         // Addition using rayon's iteration
                                         let result_array = left_array.par_iter()
                                                             .zip(right_array.par_iter())
@@ -855,8 +864,8 @@ impl Expr {
             },
             ExprType::Logical => {
                 // (or, and)
-                let left_literal = self.left.as_mut().unwrap().evaluate_expr();
-                let right_literal = self.right.as_mut().unwrap().evaluate_expr();
+                let left_literal = self.left.as_ref().unwrap().evaluate_expr();
+                let right_literal = self.right.as_ref().unwrap().evaluate_expr();
                 if !Expr::is_truthy(&left_literal) || !Expr::is_truthy(&left_literal) {
                     self.print_custom_error(&format!("'Logical' {:?} cannot be applied to {:?} and {:?}", self.operator.token_type, left_literal.literal_type, right_literal.literal_type));
                 }
@@ -878,7 +887,7 @@ impl Expr {
                 return right_literal;
             },
             ExprType::Unary => {
-                let literal = self.right.as_mut().unwrap().evaluate_expr();
+                let literal = self.right.as_ref().unwrap().evaluate_expr();
                 match self.operator.token_type {
                     token::TokenType::Minus => {
                         if literal.literal_type != LiteralType::Number {
@@ -924,7 +933,7 @@ impl Expr {
                 };
             },
             ExprType::Grouping => {
-                return self.right.as_mut().unwrap().evaluate_expr();
+                return self.right.as_ref().unwrap().evaluate_expr();
             },
 
             ExprType::Literal => {
@@ -936,7 +945,7 @@ impl Expr {
             },
 
             ExprType::Assign => {
-                let literal_value = self.right.as_mut().unwrap().evaluate_expr();
+                let literal_value = self.right.as_ref().unwrap().evaluate_expr();
                 ENV.lock().unwrap().assign_variable(&self.operator, literal_value.clone());
                 return Literal::none();
             },
@@ -947,8 +956,8 @@ impl Expr {
                 let mut array_reference = ENV.lock().unwrap().get_variable(&self.operator);
 
                 if array_reference.literal_type == LiteralType::Array {
-                    let index_literal = self.left.as_mut().unwrap().evaluate_expr();
-
+                    let index_literal = self.left.as_ref().unwrap().evaluate_expr();
+                    // Do some index checks
                     if index_literal.literal_type != LiteralType::Number {
                         self.print_custom_error(&format!("{:?} is not a valid array index type. Only positive integers are allowed", index_literal.literal_type));
                     }
@@ -962,7 +971,7 @@ impl Expr {
                     }
 
                     // Set new value
-                    let literal_value = self.right.as_mut().unwrap().evaluate_expr();
+                    let literal_value = self.right.as_ref().unwrap().evaluate_expr();
 
                     if array_reference.array_values.len() == 0 {
                         if index_integer == 0 {
@@ -1006,7 +1015,7 @@ impl Expr {
                 let mut error = false;
                 let mut error_literal_type = LiteralType::None;
                 // Avoid cloning the arguments/values, because they can be large
-                for value_expr in &mut self.arguments {
+                for value_expr in &self.arguments {
                     let value = value_expr.evaluate_expr();
                     if index == 0 {
                         value_type = value.literal_type;
@@ -1027,9 +1036,9 @@ impl Expr {
             },
             // For Array access
             ExprType::ArrayAccess => {
-                let array_reference = self.left.as_mut().unwrap().evaluate_expr();
+                let array_reference = self.left.as_ref().unwrap().evaluate_expr();
                 if array_reference.literal_type == LiteralType::Array {
-                    let index_literal = self.right.as_mut().unwrap().evaluate_expr();
+                    let index_literal = self.right.as_ref().unwrap().evaluate_expr();
                     if index_literal.literal_type != LiteralType::Number {
                         self.print_custom_error(&format!("{:?} is not a valid array index type. Only positive integers are allowed", index_literal.literal_type));
                     }
@@ -1057,19 +1066,19 @@ impl Expr {
 
             // For function calling/invocation, not declaration 
             ExprType::Call => {
-                let callee = self.right.as_mut().unwrap().evaluate_expr();
+                let callee = self.right.as_ref().unwrap().evaluate_expr();
                 let mut arguments = Vec::<Literal>::new();
-                for arg in &mut self.arguments {
+                for arg in &self.arguments {
                     arguments.push(arg.evaluate_expr());
                 }
                 if callee.literal_type != LiteralType::Function {
                     self.print_custom_error(&format!("{:?} is not a function that can be called", callee.literal_type));
                 }
-                let mut function = callee.function.unwrap();
+                let function = callee.function.unwrap();
                 if function.arg_length() != arguments.len() {
                     self.print_custom_error(&format!("Function expects {} arguments, but received {} arguments instead", function.arg_length(), arguments.len()));
                 }
-                match function.call(arguments) {
+                match function.call(arguments, &self.operator) {
                     Some(literal) => {
                         literal
                     },

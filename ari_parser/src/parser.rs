@@ -125,7 +125,7 @@ impl Parser {
             // Create expression
             let expr = self.expression();
             // Check if variable exists prematurely, not sure if buggy because different from original
-            let mut e = expr.clone().unwrap();
+            let e = expr.clone().unwrap();
             if e.expr_type == ast::ExprType::Variable {
                 e.evaluate_expr();
             }

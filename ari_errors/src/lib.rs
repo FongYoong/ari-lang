@@ -5,6 +5,7 @@ use std::sync::Mutex;
 extern crate lazy_static;
 
 lazy_static! {
+    pub static ref SCRIPT: Mutex<bool> = {Mutex::new(true)}; // Check if running script or interpreter
     pub static ref BORDER_LENGTH: Mutex<usize> = Mutex::new(0);
     //pub static ref IS_WEB: bool = false; // A reminder of possbily using WASM for running on the web
 }
@@ -184,11 +185,19 @@ pub fn print_colour(s: &str, color: Color, newline: bool, bold: bool) {
     }
 }
 
+use std::io;
 pub fn exit() {
-    let len_ref : &mut usize = &mut BORDER_LENGTH.lock().unwrap();
+    let len_ref : &usize = &BORDER_LENGTH.lock().unwrap();
     let lower = (0..*len_ref).map(|_| "_").collect::<String>();
     println!("");
     print_green(&lower, true, true);
     print_white("", false, false);
+    let script_ref : &bool = &SCRIPT.lock().unwrap();
+    if !script_ref {
+        // Is running interpreter
+        println!("Press any key to exit.");
+        let mut input_line = String::new();
+        io::stdin().read_line(&mut input_line);
+    }
     process::exit(0);
 }

@@ -93,7 +93,7 @@ impl Scanner <'_>{
                 if c.is_numeric() {
                     self.consume_number_lexeme();
                 }  
-                else if self.is_alpha(c) {
+                else if self.is_alpha(c) || c == '_' {
                     self.consume_identifier();
                 }
                 else {
@@ -168,7 +168,7 @@ impl Scanner <'_>{
         self.add_token(token::TokenType::Number, &self.source[self.start .. self.current].to_owned());
     }
     fn consume_identifier(&mut self){
-        while self.peek().is_alphanumeric() {
+        while self.peek().is_alphanumeric() || self.peek() == '_' {
             self.advance();
         }
         let text = &self.source[self.start .. self.current].to_owned();

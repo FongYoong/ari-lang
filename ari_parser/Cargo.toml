@@ -10,4 +10,9 @@ edition = "2018"
 lazy_static = "1.4.0"
 termcolor = "1.1"
 rayon = "1.5"
+rand = "0.8.3"
+rand_distr = "0.4.0"
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+rocket = "0.4.6"
+rocket_contrib = "0.4.6"
 ari_errors = {path = "../ari_errors"}
