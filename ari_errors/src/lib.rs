@@ -195,7 +195,7 @@ pub fn exit() {
     let script_ref : &bool = &SCRIPT.lock().unwrap();
     if !script_ref {
         // Is running interpreter
-        println!("Press any key to exit.");
+        println!("Press Enter to exit.");
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line);
     }

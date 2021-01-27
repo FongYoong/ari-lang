@@ -463,7 +463,16 @@ fn to_number(arguments: Vec<ast::Literal>, tok: &token::Token) -> ast::Literal {
         tok.print_custom_error(&format!("to_number() expects one argument of type String, but received {:?} instead", value.literal_type));
     }
     else {
-        return ast::Literal::number(value.value.clone());
+        let result = match value.value.parse::<f32>() {
+            Ok(v) => {
+                v
+            },
+            Err(_) => {
+                tok.print_custom_error(&format!("to_number() failed to extract a Number from {}", value.value));
+                panic!();
+            }
+        };
+        return ast::Literal::number(result.to_string());
     }
     ast::Literal::none()
 }
