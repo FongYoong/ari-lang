@@ -625,7 +625,7 @@ fn remove(arguments: Vec<ast::Literal>, tok: &token::Token) -> ast::Literal {
             if source_array.len() == 0 {
                 tok.print_custom_error(&format!("remove() cannot remove at {} because the array is empty.", index_integer));
             }
-            if index_integer > source_array.len() {
+            if index_integer >= source_array.len() {
                 tok.print_custom_error(&format!("remove() cannot remove at {} because it is beyond the array's bounds.", index_integer));
             }
             source_array.remove(index_integer);
@@ -634,7 +634,7 @@ fn remove(arguments: Vec<ast::Literal>, tok: &token::Token) -> ast::Literal {
         else {
             // String remove
             let mut source_string = source.value.clone();
-            if index_integer > source_string.len() {
+            if index_integer >= source_string.len() {
                 tok.print_custom_error(&format!("remove() cannot remove at {} because it is beyond the string's bounds.", index_integer));
             }
             source_string.remove(index_integer);
