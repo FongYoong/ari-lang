@@ -335,11 +335,8 @@ fn log(arguments: Vec<ast::Literal>, tok: &token::Token) -> ast::Literal {
     }
     else {
         let result = Expr::string_to_float(&value).log(Expr::string_to_float(&base));
-        if result.is_infinite() {
-            tok.print_custom_error(&format!("log() expects 2nd argument (value) to be non-zero"));
-        }
-        else if result.is_nan() {
-            tok.print_custom_error(&format!("log() expects 1st argument (base) to be non-zero"));
+        if result.is_infinite() || result.is_nan() {
+            tok.print_custom_error(&format!("log() resulted in an invalid value"));
         }
         return ast::Literal::number(result.to_string());
     }
