@@ -549,7 +549,8 @@ impl Expr {
     pub fn is_equal(&self, op_name: &str, left_type: LiteralType, right_type: LiteralType, left_string: &str, right_string: &str) -> bool {
         // &mut self is included for the purpose of tracking down the error location
         if left_type != right_type {
-            self.print_custom_error(&format!("{} cannot be applied to {:?} and {:?}", op_name, left_type, right_type));
+            return false;
+            //self.print_custom_error(&format!("{} cannot be applied to {:?} and {:?}", op_name, left_type, right_type));
         }
         match left_type {
             LiteralType::Number => {

@@ -1,4 +1,7 @@
-### 📖 [**Read the documentation.**]()
+## Ari, a simple interpreter messily written in Rust.
+
+***
+### 📖 [**Read the documentation.**](https://fongyoong.github.io/ari-docs)
 
 ***
 ### ⏬ Download:
