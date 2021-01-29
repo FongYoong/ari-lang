@@ -142,20 +142,21 @@ pub struct Statement {
     pub expr: Option<Box<Expr>>,
     pub token_name: token::Token,
     pub tokens: Vec<token::Token>,
+    pub is_function: bool,
 }
 
 impl Clone for Box<Statement> {
     fn clone(&self) -> Box<Statement> {
         Box::new(Statement::new(self.statement_type, self.statements.clone(),
         self.then_branch.clone(), self.else_branch.clone(),
-        self.expr.clone(), self.token_name.clone(), self.tokens.clone()))
+        self.expr.clone(), self.token_name.clone(), self.tokens.clone(), self.is_function))
     }
 }
 
 impl Statement {
     pub fn new(statement_type : StatementType, statements: Vec<Box<Statement>>,
                 then_branch: Option<Box<Statement>>, else_branch: Option<Box<Statement>>,
-                expr: Option<Box<Expr>>, token_name: token::Token, tokens: Vec<token::Token>) -> Statement {
+                expr: Option<Box<Expr>>, token_name: token::Token, tokens: Vec<token::Token>, is_function: bool) -> Statement {
         Statement {
             statement_type,
             statements,
@@ -164,51 +165,52 @@ impl Statement {
             expr,
             token_name,
             tokens,
+            is_function,
 
         }
     }
-    pub fn new_block(statements: Vec<Box<Statement>>) -> Statement {
-        Statement::new(StatementType::Block, statements, None, None, None, token::Token::none(), Vec::<token::Token>::new())
+    pub fn new_block(statements: Vec<Box<Statement>>, is_function: bool) -> Statement {
+        Statement::new(StatementType::Block, statements, None, None, None, token::Token::none(), Vec::<token::Token>::new(), is_function)
     }
     pub fn new_break() -> Statement {
-        Statement::new(StatementType::Break, Vec::<Box<Statement>>::new(), None, None, None, token::Token::none(), Vec::<token::Token>::new())
+        Statement::new(StatementType::Break, Vec::<Box<Statement>>::new(), None, None, None, token::Token::none(), Vec::<token::Token>::new(), false)
     }
     pub fn new_continue() -> Statement {
-        Statement::new(StatementType::Continue, Vec::<Box<Statement>>::new(), None, None, None, token::Token::none(), Vec::<token::Token>::new())
+        Statement::new(StatementType::Continue, Vec::<Box<Statement>>::new(), None, None, None, token::Token::none(), Vec::<token::Token>::new(), false)
     }
     pub fn new_expression(expr : Option<Box<Expr>>) -> Statement {
-        Statement::new(StatementType::Expression, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new())
+        Statement::new(StatementType::Expression, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new(), false)
     }
 
     // For delcaring user-defined function
     pub fn new_function(then_branch: Option<Box<Statement>>, token_name: token::Token, tokens: Vec<token::Token>) -> Statement {
-        Statement::new(StatementType::Function, Vec::<Box<Statement>>::new(), then_branch, None, None, token_name, tokens)
+        Statement::new(StatementType::Function, Vec::<Box<Statement>>::new(), then_branch, None, None, token_name, tokens, false)
     }
     // Function return
     pub fn new_return(token_name: token::Token, expr: Option<Box<Expr>>) -> Statement {
-        Statement::new(StatementType::Return, Vec::<Box<Statement>>::new(), None, None, expr, token_name, Vec::<token::Token>::new())
+        Statement::new(StatementType::Return, Vec::<Box<Statement>>::new(), None, None, expr, token_name, Vec::<token::Token>::new(), false)
     }
 
     // Conditional
     pub fn new_if(condition_expr : Option<Box<Expr>>, then_branch : Option<Box<Statement>>,  else_branch : Option<Box<Statement>>) -> Statement {
-        Statement::new(StatementType::If, Vec::<Box<Statement>>::new(), then_branch, else_branch, condition_expr, token::Token::none(), Vec::<token::Token>::new())
+        Statement::new(StatementType::If, Vec::<Box<Statement>>::new(), then_branch, else_branch, condition_expr, token::Token::none(), Vec::<token::Token>::new(), false)
     }
     pub fn new_while(condition_expr : Option<Box<Expr>>, body : Option<Box<Statement>>) -> Statement {
-        Statement::new(StatementType::While, Vec::<Box<Statement>>::new(), body, None, condition_expr, token::Token::none(), Vec::<token::Token>::new())
+        Statement::new(StatementType::While, Vec::<Box<Statement>>::new(), body, None, condition_expr, token::Token::none(), Vec::<token::Token>::new(), false)
     }
 
     // Special
     pub fn new_print(expr : Option<Box<Expr>>) -> Statement {
-        Statement::new(StatementType::Print, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new())
+        Statement::new(StatementType::Print, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new(), false)
     }
     pub fn new_println(expr : Option<Box<Expr>>) -> Statement {
-        Statement::new(StatementType::Println, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new())
+        Statement::new(StatementType::Println, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new(), false)
     }
     pub fn new_let(expr : Option<Box<Expr>>, token_name : token::Token) -> Statement {
-        Statement::new(StatementType::Let, Vec::<Box<Statement>>::new(), None, None, expr, token_name, Vec::<token::Token>::new())
+        Statement::new(StatementType::Let, Vec::<Box<Statement>>::new(), None, None, expr, token_name, Vec::<token::Token>::new(), false)
     }
     pub fn new_bai(expr : Option<Box<Expr>>) -> Statement {
-        Statement::new(StatementType::Bai, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new())
+        Statement::new(StatementType::Bai, Vec::<Box<Statement>>::new(), None, None, expr, token::Token::none(), Vec::<token::Token>::new(), false)
     }
 
     pub fn print(&self, newline: bool) {
@@ -272,8 +274,15 @@ impl Statement {
                 let mut continue_condition = false;
                 let mut result = Literal::none();
                 for s in &self.statements {
-                    let literal = s.evaluate_statement();
-                    if literal.literal_type == LiteralType::Break || literal.is_return {
+                    let mut literal = s.evaluate_statement();
+                    if literal.literal_type == LiteralType::Break {
+                        result = literal;
+                        break;
+                    }
+                    else if literal.is_return {
+                        if self.is_function {
+                            literal.is_return = false;
+                        }
                         result = literal;
                         break;
                     }

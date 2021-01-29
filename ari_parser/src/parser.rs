@@ -58,7 +58,7 @@ impl Parser {
         }
         self.consume(token::TokenType::RightParen, ari_errors::ErrorType::ExpectRightParen);
         self.consume(token::TokenType::LeftBrace, ari_errors::ErrorType::ExpectLeftBrace);
-        let body = Some(Box::new(ast::Statement::new_block(self.block()))); // Body of the function
+        let body = Some(Box::new(ast::Statement::new_block(self.block(), true))); // Body of the function
         return Some(Box::new(ast::Statement::new_function(body, tok, arguments)));
     }
     fn let_declaration(&mut self) -> Option<Box<ast::Statement>> {
@@ -119,7 +119,7 @@ impl Parser {
         else if self.check_next_tokens(vec![token::TokenType::LeftBrace]) {
             // Create block
             include_semicolon = false;
-            ast::Statement::new_block(self.block())
+            ast::Statement::new_block(self.block(), false)
         }
         else {
             // Create expression
@@ -197,12 +197,12 @@ impl Parser {
         let mut body_branch = self.statement();
         if increment_expr.expr_type != ast::ExprType::None {
             let statements = vec![body_branch.unwrap(), Box::new(ast::Statement::new_expression(Some(increment_expr)))];
-            body_branch = Some(Box::new(ast::Statement::new_block(statements)));
+            body_branch = Some(Box::new(ast::Statement::new_block(statements, false)));
         }
         body_branch = Some(Box::new(ast::Statement::new_while(condition_expr, body_branch)));
         if !init_statement.is_none() {
             let statements = vec![init_statement.unwrap(), body_branch.unwrap()];
-            body_branch = Some(Box::new(ast::Statement::new_block(statements)));
+            body_branch = Some(Box::new(ast::Statement::new_block(statements, false)));
         }
 
         return body_branch;

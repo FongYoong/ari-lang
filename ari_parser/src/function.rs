@@ -120,7 +120,12 @@ impl Function {
                 ENV.lock().unwrap().add_env(self.closure_env.as_ref().unwrap().clone());
                 
                 ENV.lock().unwrap().create_env();
-                let r = Some(self.call_user(arguments));
+                let mut r = Some(self.call_user(arguments));
+                /*
+                if r.as_ref().unwrap().is_return {
+                    r = Some(ast::Literal::none());
+                }*/
+
                 ENV.lock().unwrap().destroy_env();
 
                 let cloned = Some(ENV.lock().unwrap().get_env().clone());
